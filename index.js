@@ -1,5 +1,8 @@
+import RedisStore from 'connect-redis';
 import express from 'express';
+import session from 'express-session';
 import mongoose from 'mongoose';
+import { createClient } from 'redis';
 import env from './config/config.js';
 import postRoute from './routes/postRoute.js';
 import userRoute from './routes/userRoute.js';
@@ -13,6 +16,36 @@ mongoose
 	.connect(MONGO_URL)
 	.then(() => console.log('db connected!!'))
 	.catch((err) => console.log(err));
+
+// Initialize client.
+let redisClient = createClient({
+	url: `redis://${env.REDIS_URL}:${env.REDIS_PORT}`,
+});
+redisClient
+	.connect()
+	.then(() => console.log('redis connected....'))
+	.catch(console.error);
+
+// Initialize store.
+let redisStore = new RedisStore({
+	client: redisClient,
+	prefix: 'myapp:',
+});
+
+// Initialize sesssion storage.
+app.use(
+	session({
+		// resave: false,
+		// saveUninitialized: false,
+		store: redisStore,
+		secret: env.SESSION_SECRET,
+		cookie: {
+			maxAge: 60000,
+			secure: false,
+			httpOnly: true,
+		},
+	})
+);
 
 app.get('/', (_, res) => {
 	res.status(200).json({
