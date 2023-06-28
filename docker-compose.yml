@@ -1,9 +1,11 @@
 version: '3'
 services:
+  nginx:
+    build: ./nginx
+    depends_on:
+      - node-app
   node-app:
     build: .
-    ports:
-      - "3000:3000"
     depends_on:
       - mongo
   
@@ -12,6 +14,7 @@ services:
 
   redis:
     image: redis
+  
     
 
 volumes:
